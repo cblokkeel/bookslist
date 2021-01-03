@@ -36,7 +36,7 @@ const BooksList = ({ books, setBooks, categorie }) => {
     }
 
     return (
-        <section className='py-8 dark:text-white text-gray-700 flex flex-col items-center gap-4'>
+        <section className='py-8 dark:text-white text-gray-700 flex flex-col items-center'>
             {
                 books.map(book => {
                     if (book.started && !book.finished && (categorie === 'All' || categorie === 'In progress')) {

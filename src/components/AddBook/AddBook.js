@@ -4,8 +4,8 @@ const AddBook = ({ setNewAuthor, setNewTitle, handleAdd, newTitle, newAuthor }) 
     return (
         <section className='text-center text-white mt-4'>
             <div className='mb-4'>
-                <form className='flex flex-col gap-2 mx-12'>
-                    <input onChange={e => setNewTitle(e.target.value)} value={newTitle} className='rounded-md shadow-md py-1 px-3 outline-none dark:bg-gray-600 text-gray-600 dark:text-white' type="text" placeholder="Book's title" required/>
+                <form className='flex flex-col mx-12'>
+                    <input onChange={e => setNewTitle(e.target.value)} value={newTitle} className='rounded-md shadow-md py-1 px-3 mb-2 outline-none dark:bg-gray-600 text-gray-600 dark:text-white' type="text" placeholder="Book's title" required/>
                     <input onKeyDown={({ key }) => key === 'Enter' ? handleAdd() : null} onChange={e => setNewAuthor(e.target.value)} value={newAuthor} className='rounded-md shadow-md py-1 px-3 outline-none dark:bg-gray-600 text-gray-600 dark:text-white' type="text" placeholder="Author's name" required/>
                 </form>
             </div>
