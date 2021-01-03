@@ -1,28 +1,37 @@
 import React from 'react'
 import Book from './Book'
 
-const BooksList = ({ books, setBooks, categorie }) => {
+const BooksList = ({ books, setBooks, categorie, db, uid }) => {
     const setNewBooks = () => {
         const currentBooks = [...books]
         setBooks(currentBooks)
     }
 
-    const started = book => {
+    const updateDb = async book => {
+        let updates = {}
+        updates[`/users/${uid}/books/${book.id}`] = book
+        await db.ref().update(updates)
+    }
+    
+    const started = async book => {
         book.started = true
+        updateDb(book)
         setNewBooks()
     }
-
+    
     const finished = book => {
         book.finished = true
+        updateDb(book)
         setNewBooks()
     }
-
+    
     const restart = book => {
         book.finished = false
         book.started = false
+        updateDb(book)
         setNewBooks()
     }
-
+    
     const deleteBook = book => {
         const bookTitle = book.title
         const bookAuthor = book.author
@@ -32,6 +41,7 @@ const BooksList = ({ books, setBooks, categorie }) => {
                 currentBooks.splice(idx, 1)
             }
         })
+        db.ref(`/users/${uid}/books/${book.id}`).remove()
         setBooks(currentBooks)
     }
 

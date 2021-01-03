@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import toast, { Toaster } from 'react-hot-toast'
 import AddBook from './components/AddBook/AddBook'
 import BooksList from './components/BooksList/BooksList'
 import ChooseCategorie from './components/ChooseCategorie/ChooseCategorie'
@@ -13,9 +14,11 @@ const App = () => {
   const [newAuthor, setNewAuthor] = useState('')
   const [isLogged, setIsLogged] = useState(false)
   const [uid, setUid] = useState('')
-
+  
   const db = fire.database()
   const auth = fire.auth()
+
+  const error = message => toast.error(message);
 
   const htmlEl = document.querySelector('html')
   const initialMount = useRef(true)
@@ -30,20 +33,45 @@ const App = () => {
     return isTheSame
   } 
   
-  const handleAdd = () => {
+  const retrieve = () => {
+    let array = []
+    
+    return array
+  }
+
+  const handleAdd = async () => {
     const book = {
+        id: new Date().getTime(),
         title: newTitle,
         author: newAuthor,
         finished: false,
-        started: false
+        started: false,
     }
+    let dbBooks = []
+
+    db.ref('/users/' + uid).orderByValue().on('value', snapshot => {
+      if (snapshot.val().books) {
+        dbBooks = Object.values(snapshot.val().books)
+      }
+    })
 
     if (newTitle && newAuthor) {
-      if(!compare(books, book)) {
-        setBooks([...books, book])
+      if(!compare(dbBooks, book)) {
+        
+        let updates = {}
+        updates[`/users/${uid}/books/${book.id}`] = book
+        await db.ref().update(updates)
+
+        let test = []
+
+        db.ref('/users/' + uid).orderByValue().on('value', snapshot => {
+          test = Object.values(snapshot.val().books)
+        })
+
+        setBooks(test)
+
       } else {
-        // TODO: add toast instead of alert
-        alert('The books already exist')
+        error('The books already exist')
       }
       setNewAuthor('')
       setNewTitle('')
@@ -66,36 +94,39 @@ const App = () => {
 
   useEffect(() => {
     if (initialMount.current) {
-      if(localStorage.books) {
-        setBooks(JSON.parse(localStorage.books))
-      }
       if (localStorage.theme === 'dark') {
         htmlEl.classList.add('dark')
       }
+
       if (localStorage.uid) {
         setIsLogged(true)
         setUid(localStorage.uid)
+        db.ref('/users/' + localStorage.uid).orderByValue().on('value', snapshot => {
+          if(snapshot.val().books) {
+            setBooks(Object.values(snapshot.val().books))
+          }
+        })
       }
       initialMount.current = false
     } else {
-      localStorage.books = JSON.stringify(books)
+      
     }
   })
 
   return (
     <main className='bg-gray-100 dark:bg-gray-800 min-h-screen font-mono'>
-      <Header toggleDark={toggleDark} />
+      <Header toggleDark={toggleDark} handleLogOut={handleLogOut} isLogged={isLogged}/>
       {
         isLogged ? (
           <>
+            <Toaster />
             <ChooseCategorie setCategorie={setCategorie}/>
             <AddBook setNewAuthor={setNewAuthor} setNewTitle={setNewTitle} handleAdd={handleAdd} newAuthor={newAuthor} newTitle={newTitle}/>
-            <BooksList books={books} categorie={categorie} setBooks={setBooks}/>
-            <button className='p-2 bg-red-400 text-white' onClick={handleLogOut}>Log Out</button>
+            <BooksList books={books} categorie={categorie} setBooks={setBooks} db={db} uid={uid}/>
           </>
         ) : (
           <>
-            <Login auth={auth} setIsLogged={setIsLogged} db={db}/>
+            <Login auth={auth} setIsLogged={setIsLogged} db={db} setUid={setUid} setBooks={setBooks}/>
           </>
         )
       }
